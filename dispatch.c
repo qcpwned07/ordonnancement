@@ -1,6 +1,6 @@
 /*
 
-ARNAUD VILLEMAIRE
+VILLEMAIRE, ARNAUD
 C.P. : VILA12049608
 
 PICARD, MATTHIEU
@@ -20,7 +20,6 @@ gcc -Wall -std=c99 dispatch.c utils.c -o dispatch
 // ------------------------- //
 // -       STRUCTURE       - //
 // ------------------------- //
-
 typedef struct
 {
     int pid;
@@ -112,6 +111,9 @@ Process * nextReady (Queue* q);
 void dequeue(Process * p, Queue *qs);
 void setTermine(List *l);
 void hasString(char *str, int err);
+
+void freeList (List *l);
+void freeQueue (Queue *q);
 //
 // ------------------------- //
 // -       FUNCTIONS       - //
@@ -130,7 +132,7 @@ int main (int argc, char const *argv[])
     int quantumF1 = atoi(argv[2]);
     
     if(quantumF0 <= 0 || quantumF1 <= 0){
-      erreur(2);
+        erreur(2);
     }
 
     // Ouvrir le fichier, erreur si probleme
@@ -143,14 +145,12 @@ int main (int argc, char const *argv[])
 
     // Creation des files
     // Tableau contenant les donnees
-    List *l = newList();
-
-    l = parseFile(file);
+    List * l = parseFile(file);
 
     ordonnancer(*l, quantumF0, quantumF1);
 
     // Free les malloc
-    free(l);          // NEED ALSO TO FREE SECOND LEVEL POINTERS ??
+    freeList(l);    
     return 0;
 }
 
@@ -169,22 +169,17 @@ void ordonnancer (List l, int quantum0, int quantum1)
     Process * idle  = newProcess();
     Process * cpu = idle; 
     sortList ( &l );
-    printList(l);
 
     while (!allFinished(l))
     {
-        //printf("\n---- CYCLE  #%d ----\n", cycle);
         //Mettre les procvessus a ready
         setReady(&l, cycle);
         setTermine(&l);
-
         // Les inserer dans la bonne file
         for(i=0; i<=l.current; i++)
             if(l.ps[i].tarrive == cycle)
                 enqueue(&qs[l.ps[i].nextQ], &l.ps[i]);
 
-        // Impression des files
-        //printQueue(qs);
         if (cpu != idle)
         {
             if (cpu->ts[0] == 0) {
@@ -202,14 +197,13 @@ void ordonnancer (List l, int quantum0, int quantum1)
             if(cpu != nextReady(qs))
                 mettreDansCpu(&cpu, nextReady(qs), cycle, quantums[nextReady(qs)->nextQ] );
 
-        //printProcess(cpu);
         //Execute the cycle
         cpu->quantumLeft--;
         cpu->ts[0]--;
         cpu->timeInCpu++;
         cycle++;
     }
-        printList(l);
+    freeQueue(qs);
 }
 
 Process * nextReady (Queue qs[]){
@@ -230,8 +224,6 @@ Process * nextReady (Queue qs[]){
 
 Process * mettreDansCpu (Process **cpu, Process *p, int t, int quantum)
 {
-    //printf("BreakPoint #B : mettreDansCPU \n");
-    //printf("Putting PID #%d in CPU\n", p->pid);
     bloquer(*cpu, t);
     *cpu = p;
     if(p->quantumLeft == 0)
@@ -255,12 +247,10 @@ void bloquer (Process * p, int t)
 {
     int i; 
     // Afficher ses infos
-    //printf("Blocking %d \n", p->pid);
     if (p->timeInCpu > 0)
         print_element(p->pid, p->tarrive, p->timeInCpu);
-    // Si il doit changer de file 
-    //Si son temps demander est termine
-    if(p->ts[0] == 0)
+    // Si son temps demander est termine
+    if(p->ts[0] == 0) 
     {
         p->tn--;
         // Changer son prochain temps darriver
@@ -276,24 +266,24 @@ void bloquer (Process * p, int t)
         for (i=0; i<=p->tn; i++)
             p->ts[i] = p->ts[i+1];
 
-    } else if (p->quantumLeft == 0) {
+    } else if (p->quantumLeft == 0) { 
         p->etat = READY;
         p->tarrive = t+1;
     }
 
-    if(p->tn < 0)
+    if(p->tn < 0) 
     {
         p->tarrive = 0;
         p->etat = TERMINE;
         p->nextQ = 3;
     }
+
     p->timeInCpu = 0;
 }
 
 List * parseFile (FILE *file)
 {
     // Declarer/initialiser les variables
-    const int START_SIZE = 50;
     int last        = 0;
     //int current     = 0;
     int compteur    = 0;
@@ -353,7 +343,6 @@ List * parseFile (FILE *file)
             else if (current >= 0 && last < 0)
                 compteur = atoi(current);
 
-            //printf("compt. :%d, last: %d, current: %d, \n", compteur, last, atoi(current));
             if (temp == '\n' || atoi(current) < 0) {
                 addT(p,compteur);
                 if (atoi(current) < 0)
@@ -370,7 +359,6 @@ List * parseFile (FILE *file)
         //  --NEW LINE-- 
         if (temp == '\n' || temp == EOF) {
             //reinitialiser les valeur de la ligne
-            printf("\n");
             arrayIndex ++;
             compteur    = 0;
             last        = 0;
@@ -379,7 +367,6 @@ List * parseFile (FILE *file)
     }
 
     fclose (file);       
-    //printList(*l);
     return l;
 }
 
@@ -430,10 +417,20 @@ void swap (Process *x, Process *y)
     *y = temp;
 }
 
-void freeProcess (Process *p)
-{
+void freeProcess (Process * p) {
     //TODO
+    free(p->ts);
     free(p);
+}
+void freeList (List *l) {
+    int i;
+    for(i=0; i<l->current; i++)
+        free(l->ps[i].ts);
+    free(l->ps);
+    free(l);
+}
+void freeQueue (Queue *q){
+    free(q->ps);
 }
 
 void addT (Process *p, int t)
@@ -550,8 +547,6 @@ void enqueue (Queue *q, Process *p)
 
 void dequeue(Process * p, Queue *q)
 {
-    //printf("Dequieing %d \n Before: \n",  p->pid);
-    //printQueue(*q);
     int i;
     q->current--;
     for (i=0; i<=q->current + 1; i++)
@@ -573,16 +568,3 @@ void erreur (int err)
     print_erreur(err);
     exit(err);
 }
-
-// TODO 
-//
-// ||||||||
-//\\\\\o
-// ---------------- OLD PRINTS ---------------------------
-        //printf("NEXT READY:");
-        //if (nextReady(qs) != NULL)
-        //    printProcess(nextReady(qs));
-        //else 
-        //    printf("NULL");
-        //printf("\n");
-//jkh
