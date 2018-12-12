@@ -198,7 +198,7 @@ void ordonnancer (List l, int quantum0, int quantum1)
         {
             if (cpu->ts[0] == 0) {
                 dequeue(cpu, &qs[cpu->nextQ]);
-                bloquer(cpu,cycle);
+                //bloquer(cpu,cycle);
                 mettreDansCpu(&cpu, idle, cycle, -1);
             }
             else if (cpu->quantumLeft == 0)
@@ -294,7 +294,9 @@ void bloquer (Process * p, int t)
         p->tarrive = t - p->ts[0];
         // Changer son prochain temps dexec
         p->etat = BLOQUE;
+        // Passer a la file 0 au deblocage
         p->nextQ = 0;
+        p->quantumLeft = 0;
         p->tn--;
         for (i=0; i<=p->tn; i++)
             p->ts[i] = p->ts[i+1];
