@@ -180,6 +180,8 @@ void ordonnancer (List l, int quantum0, int quantum1)
     {
         //printf("\n---- CYCLE  #%d ----\n", cycle);
         
+        //if (cycle == 16)
+        //    printList(l);
         //Mettre les procvessus a ready
         setReady(&l, cycle);
         setTermine(&l);
@@ -212,9 +214,9 @@ void ordonnancer (List l, int quantum0, int quantum1)
         if(nextReady(qs) != NULL)
             if(cpu != nextReady(qs))
             {
-                printf("\n---- CYCLE  #%d ----\n", cycle);
+                //printf("\n---- CYCLE  #%d ----\n", cycle);
                 mettreDansCpu(&cpu, nextReady(qs), cycle, quantums[nextReady(qs)->nextQ] );
-                printQueue(qs);
+                //printQueue(qs);
             }
 
         //printProcess(cpu);
@@ -289,9 +291,10 @@ void bloquer (Process * p, int t)
         // Changer son prochain temps darriver
         for (i=0; i<=p->tn; i++)
             p->ts[i] = p->ts[i+1];
-        p->tarrive = t - p->ts[0] + 1;
+        p->tarrive = t - p->ts[0];
         // Changer son prochain temps dexec
         p->etat = BLOQUE;
+        p->nextQ = 0;
         p->tn--;
         for (i=0; i<=p->tn; i++)
             p->ts[i] = p->ts[i+1];
@@ -301,15 +304,12 @@ void bloquer (Process * p, int t)
         p->tarrive = t+1;
     }
 
-
     if(p->tn < 0)
     {
         p->tarrive = 0;
         p->etat = TERMINE;
         p->nextQ = 3;
     }
-
-
         
     p->timeInCpu = 0;
 }
@@ -352,7 +352,6 @@ List * parseFile (FILE *file)
 
         // --TARRIVE--
         fscanf (file, "%s%c", current, &temp);
-        printf("%cval\n",temp);
         hasString(current,3);     
         p->tarrive = atoi(current);
         if (atoi(current) < 0 || temp == '\n' || feof(file)) 
@@ -365,7 +364,6 @@ List * parseFile (FILE *file)
             fscanf (file, "%s%c", current, &temp);
             if(temp != '\n' && temp != EOF){
               fscanf(file, "%c", &temp1);
-              printf("v%c\n",temp1);
               if(temp1 == ' ' || temp1 == '\n' || temp1 == EOF){
                 fscanf(file, " ");
                 temp = '\n';
@@ -374,7 +372,6 @@ List * parseFile (FILE *file)
             }
             //fscanf(file, " ");
             //fscanf(file, "%c", &temp);
-            printf("c%s\n",current);
             hasString(current,3);    
             if (last < 0 && atoi(current) < 0) 
                 erreur(ERR_FICHIER_CORROMPU);
