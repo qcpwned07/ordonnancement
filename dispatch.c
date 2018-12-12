@@ -176,7 +176,7 @@ void ordonnancer (List l, int quantum0, int quantum1)
     sortList ( &l );
     printList(l);
 
-    while (!allFinished(l) && cycle < 85)
+    while (!allFinished(l))
     {
         //printf("\n---- CYCLE  #%d ----\n", cycle);
         
