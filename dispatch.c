@@ -180,8 +180,6 @@ void ordonnancer (List l, int quantum0, int quantum1)
     {
         //printf("\n---- CYCLE  #%d ----\n", cycle);
         
-        //if (cycle == 16)
-        //    printList(l);
         //Mettre les procvessus a ready
         setReady(&l, cycle);
         setTermine(&l);
