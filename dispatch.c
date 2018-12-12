@@ -178,7 +178,7 @@ void ordonnancer (List l, int quantum0, int quantum1)
 
     while (!allFinished(l) && cycle < 85)
     {
-        //printf("\n\n---- CYCLE  #%d ----\n\n", cycle);
+        //printf("\n---- CYCLE  #%d ----\n", cycle);
         
         //Mettre les procvessus a ready
         setReady(&l, cycle);
@@ -211,6 +211,7 @@ void ordonnancer (List l, int quantum0, int quantum1)
             {
                 dequeue(cpu, &qs[cpu->nextQ]);
                 enqueue(&qs[cpu->nextQ], cpu);
+                cpu->quantumLeft = quantums[cpu->nextQ];
             }
         }
 
@@ -225,7 +226,11 @@ void ordonnancer (List l, int quantum0, int quantum1)
         //// TODO chg quantum 0
         if(nextReady(qs) != NULL)
             if(cpu != nextReady(qs))
+            {
+                printf("\n---- CYCLE  #%d ----\n", cycle);
                 mettreDansCpu(&cpu, nextReady(qs), cycle, quantums[nextReady(qs)->nextQ] );
+                printQueue(qs);
+            }
 
         //printProcess(cpu);
         //Execute the cycle
@@ -350,8 +355,8 @@ List * parseFile (FILE *file)
 
         // --PID--
         fscanf (file, "%s%c", current, &temp);
-        printf("%s\n",current);
-        printf("%cval\n",temp);
+        //printf("%s\n",current);
+        //printf("%cval\n",temp);
         hasString(current,3);
         p->pid = atoi(current);                           
         if( feof(file) )
@@ -396,7 +401,7 @@ List * parseFile (FILE *file)
             else if (current >= 0 && last < 0)
                 compteur = atoi(current);
 
-            printf("compt. :%d, last: %d, current: %d, \n", compteur, last, atoi(current));
+            //printf("compt. :%d, last: %d, current: %d, \n", compteur, last, atoi(current));
 
             
             if (temp == '\n' || atoi(current) < 0) {
@@ -499,9 +504,9 @@ void addT (Process *p, int t)
 
 void printProcess (Process *p)
 {
-    printf("    PID: %d  Etat: %d  nextQ: %d  tarrive: %d   [", p->pid, p->etat, p->nextQ, p->tarrive);
+    printf("    PID %d:   Etat: %d | qLeft: %d | nextQ: %d | tarrive: %d   [", p->pid, p->etat, p->quantumLeft, p->nextQ, p->tarrive);
     for(int i=0; i <= p->tn ;i++)
-        printf(" %d ", p->ts[i]);
+        printf(" %2d ", p->ts[i]);
     printf ("]\n");
     //printf("PID: %d, tn: %d, tsizeExec: %d, tarrive: %d \n", p->pid,p->tn, p->tsize, p->tarrive);
 }
