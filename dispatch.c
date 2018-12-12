@@ -312,7 +312,6 @@ void bloquer (Process * p, int t)
         p->etat = TERMINE;
         p->nextQ = 3;
     }
-        
     p->timeInCpu = 0;
 }
 
