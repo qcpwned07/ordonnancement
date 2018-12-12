@@ -192,14 +192,6 @@ void ordonnancer (List l, int quantum0, int quantum1)
         // Impression des files
         //printQueue(qs);
 
-        //Verifier si le processus a termine son execution
-       // if (cpu != idle)
-       //     if (cpu->quantumLeft == 0 || cpu->ts[0] == 0) {
-       //         dequeue(cpu, &qs[cpu->nextQ]);
-       //         bloquer(cpu,cycle);
-       //         mettreDansCpu(&cpu, idle, cycle, -1);
-       //     }
-
         if (cpu != idle)
         {
             if (cpu->ts[0] == 0) {
@@ -214,13 +206,6 @@ void ordonnancer (List l, int quantum0, int quantum1)
                 cpu->quantumLeft = quantums[cpu->nextQ];
             }
         }
-
-        //printf("NEXT READY:");
-        //if (nextReady(qs) != NULL)
-        //    printProcess(nextReady(qs));
-        //else 
-        //    printf("NULL");
-        //printf("\n");
 
         //// Si arrive un nouveau processus prioritaire, le mettre dans le CPU
         //// TODO chg quantum 0
@@ -579,7 +564,10 @@ int setReady (List *l, int t)
          if(l->ps[i].tarrive == t ) {
              //Si il etait bloque, remmettre dans la file F0
              if(l->ps[i].etat == BLOQUE)
+             {
                  l->ps[i].nextQ = 0;
+                 l->ps[i].quantumLeft = 0;
+             }
              l->ps[i].etat = READY;
             n++;
         }
@@ -619,11 +607,11 @@ void dequeue(Process * p, Queue *q)
 }
 
 void hasString(char *str, int err){
-  char *endptr;
-  strtol(str, &endptr, 10);
-  if (*endptr != '\0' || endptr == str) {
-    erreur(err);
-  }
+    char *endptr;
+    strtol(str, &endptr, 10);
+    if (*endptr != '\0' || endptr == str) {
+        erreur(err);
+    }
 }
 
 void erreur (int err)
@@ -638,4 +626,11 @@ void erreur (int err)
 // Verifier PID = 0 et tarrive =0 valide
 // ||||||||
 //\\\\\o
+// ---------------- OLD PRINTS ---------------------------
+        //printf("NEXT READY:");
+        //if (nextReady(qs) != NULL)
+        //    printProcess(nextReady(qs));
+        //else 
+        //    printf("NULL");
+        //printf("\n");
 //jkh
