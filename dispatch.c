@@ -6,9 +6,7 @@ C.P. : VILA12049608
 PICARD, MATTHIEU
 C.P. : PICM07129307
 
-
 gcc -Wall -std=c99 dispatch.c utils.c -o dispatch
-
 */
 
 #include <stdio.h>
@@ -143,7 +141,6 @@ int main (int argc, char const *argv[])
       erreur(1);        
     }
 
-
     // Creation des files
     // Tableau contenant les donnees
     List *l = newList();
@@ -160,10 +157,8 @@ int main (int argc, char const *argv[])
 
 void ordonnancer (List l, int quantum0, int quantum1)
 {
-
     int cycle       = 0;
     int i           = 0;
-
 
     Queue qs[3];
     qs[0]           = newQueue();
@@ -179,7 +174,6 @@ void ordonnancer (List l, int quantum0, int quantum1)
     while (!allFinished(l))
     {
         //printf("\n---- CYCLE  #%d ----\n", cycle);
-        
         //Mettre les procvessus a ready
         setReady(&l, cycle);
         setTermine(&l);
@@ -191,16 +185,12 @@ void ordonnancer (List l, int quantum0, int quantum1)
 
         // Impression des files
         //printQueue(qs);
-
         if (cpu != idle)
         {
             if (cpu->ts[0] == 0) {
                 dequeue(cpu, &qs[cpu->nextQ]);
-                //bloquer(cpu,cycle);
                 mettreDansCpu(&cpu, idle, cycle, -1);
-            }
-            else if (cpu->quantumLeft == 0)
-            {
+            } else if (cpu->quantumLeft == 0) {
                 dequeue(cpu, &qs[cpu->nextQ]);
                 enqueue(&qs[cpu->nextQ], cpu);
                 cpu->quantumLeft = quantums[cpu->nextQ];
@@ -208,14 +198,9 @@ void ordonnancer (List l, int quantum0, int quantum1)
         }
 
         //// Si arrive un nouveau processus prioritaire, le mettre dans le CPU
-        //// TODO chg quantum 0
         if(nextReady(qs) != NULL)
             if(cpu != nextReady(qs))
-            {
-                //printf("\n---- CYCLE  #%d ----\n", cycle);
                 mettreDansCpu(&cpu, nextReady(qs), cycle, quantums[nextReady(qs)->nextQ] );
-                //printQueue(qs);
-            }
 
         //printProcess(cpu);
         //Execute the cycle
@@ -230,11 +215,9 @@ void ordonnancer (List l, int quantum0, int quantum1)
 Process * nextReady (Queue qs[]){
     int i, j;
     Process * p = NULL;
-    Queue  q;
 
     for (i=0; i<3; i++)
     {
-        q = qs[i];
         for(j=0; j<=qs[i].current; j++)
         if (qs[i].current >= 0) {
             p = qs[i].ps[0] ;
@@ -242,10 +225,6 @@ Process * nextReady (Queue qs[]){
             j = qs[i].current +2;
         } 
     }
-    //if(p == NULL)
-    //    printf("P == NULL #14\n");
-    //else
-    //    printf("BreakPoint #A : nextReady = PID : %d\n",p->pid );
     return p;
 }
 
@@ -279,9 +258,7 @@ void bloquer (Process * p, int t)
     //printf("Blocking %d \n", p->pid);
     if (p->timeInCpu > 0)
         print_element(p->pid, p->tarrive, p->timeInCpu);
-
     // Si il doit changer de file 
-    
     //Si son temps demander est termine
     if(p->ts[0] == 0)
     {
@@ -330,24 +307,21 @@ List * parseFile (FILE *file)
     fseek(file, 0, SEEK_END);
     unsigned long len = (unsigned long)ftell(file);
     if(len == 0)
-      erreur(ERR_FICHIER_CORROMPU);
+        erreur(ERR_FICHIER_CORROMPU);
     rewind(file);
     // Parser le file 
+     
     while (!feof (file)) {  
-
         p = newProcess();
 
         // --PID--
         fscanf (file, "%s%c", current, &temp);
-        //printf("%s\n",current);
-        //printf("%cval\n",temp);
         hasString(current,3);
         p->pid = atoi(current);                           
         if( feof(file) )
             break;
         if (atoi(current) <= 0 || temp == '\n') 
             erreur(ERR_FICHIER_CORROMPU);
-        
 
         // --TARRIVE--
         fscanf (file, "%s%c", current, &temp);
@@ -357,7 +331,6 @@ List * parseFile (FILE *file)
             erreur(ERR_FICHIER_CORROMPU);
 
         // -- TABLEAU
-        
         while(temp != '\n' && temp != EOF)
         {
             fscanf (file, "%s%c", current, &temp);
@@ -369,8 +342,6 @@ List * parseFile (FILE *file)
               }
               fseek(file,-1, SEEK_CUR);
             }
-            //fscanf(file, " ");
-            //fscanf(file, "%c", &temp);
             hasString(current,3);    
             if (last < 0 && atoi(current) < 0) 
                 erreur(ERR_FICHIER_CORROMPU);
@@ -383,8 +354,6 @@ List * parseFile (FILE *file)
                 compteur = atoi(current);
 
             //printf("compt. :%d, last: %d, current: %d, \n", compteur, last, atoi(current));
-
-            
             if (temp == '\n' || atoi(current) < 0) {
                 addT(p,compteur);
                 if (atoi(current) < 0)
@@ -394,8 +363,6 @@ List * parseFile (FILE *file)
             // Changer les valeurs
             last = atoi(current);
         }
-        
-        printf("%d\n",last);
         
         if(last <= 0)
           erreur(ERR_FICHIER_CORROMPU);
@@ -412,7 +379,6 @@ List * parseFile (FILE *file)
     }
 
     fclose (file);       
-
     //printList(*l);
     return l;
 }
@@ -422,7 +388,7 @@ void validerParams(int argc, char const *argv[] )
 {
     // Checking if we have the right amount of param
     if (argc != 4 )
-        exit(1);
+        erreur(ERR_PARMETRE_INCORRECT);
 }
 
 // ---------- PROCESSES FUNCTIONS ----------
@@ -431,7 +397,6 @@ Process* newProcess ( )
 {
     Process *p;
     p           = malloc(sizeof *p);
-
     p->ts       = calloc(10, sizeof(int));
     p->pid      = 0;
     p->tarrive  = 0; 
@@ -489,7 +454,6 @@ void printProcess (Process *p)
     for(int i=0; i <= p->tn ;i++)
         printf(" %2d ", p->ts[i]);
     printf ("]\n");
-    //printf("PID: %d, tn: %d, tsizeExec: %d, tarrive: %d \n", p->pid,p->tn, p->tsize, p->tarrive);
 }
 
 // ------- LIST FUNCTIONS ---------
@@ -511,11 +475,7 @@ void addProcess (List *l, Process *p)
     }
 
     l->ps[l->current] = *p;
-    //WATCH OUT FOR SEGFAULT
-    //freeProcess(p);
 }
-    
-
 
 void printList (List l) 
 {
@@ -525,7 +485,6 @@ void printList (List l)
         Process p = l.ps[i];
         printProcess(&p);
     }
-    
 }
 
 // ------ QUEUE -----------
@@ -577,7 +536,6 @@ void setTermine(List *l)
         if(l->ps[i].tn == 0 ) {
             l->ps[i].etat = TERMINE;
         }
-        //} else if (l->ps[i].ts[ l->ps[i].tn ] ==
 }
 
 void enqueue (Queue *q, Process *p)
@@ -618,8 +576,6 @@ void erreur (int err)
 
 // TODO 
 //
-// Try with letters in file
-// Verifier PID = 0 et tarrive =0 valide
 // ||||||||
 //\\\\\o
 // ---------------- OLD PRINTS ---------------------------
